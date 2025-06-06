@@ -6,6 +6,7 @@ import com.toyverse.toyverse_backend.dto.OrderMapper;
 import com.toyverse.toyverse_backend.entity.Order;
 import com.toyverse.toyverse_backend.exception.InsufficientStockException;
 import com.toyverse.toyverse_backend.exception.PaymentFailedException;
+import com.toyverse.toyverse_backend.security.SecurityUtils;
 import com.toyverse.toyverse_backend.service.PurchaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,13 +20,12 @@ import java.util.List;
 public class PurchaseController {
 
     private final PurchaseService purchaseService;
+    private final SecurityUtils securityUtils;
 
     @PostMapping
-    public ResponseEntity<?> createPurchase(
-            @RequestHeader("X-User-Id") Long userId,
-            @Valid @RequestBody List<CartItem> cartItems
-    ) {
+    public ResponseEntity<?> createPurchase(@Valid @RequestBody List<CartItem> cartItems) {
         try {
+            Long userId = securityUtils.getCurrentUser().getId();
             Order orderEntity = purchaseService.processPurchase(userId, cartItems);
             OrderDto orderDto = OrderMapper.toDto(orderEntity);
             return ResponseEntity.ok(orderDto);
