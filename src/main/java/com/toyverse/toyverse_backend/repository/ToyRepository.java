@@ -11,4 +11,5 @@ public interface ToyRepository extends JpaRepository<Toy, Long> {
     List<Toy> findByCategory(String category);
     List<Toy> findByAgeGroup(String ageGroup);
     List<Toy> findByCategoryAndAgeGroup(String category, String ageGroup);
+    boolean existsByToyIdAndOrderItemsIsNotEmpty(Long toyId);
 }

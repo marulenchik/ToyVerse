@@ -30,6 +30,9 @@ public class Toy {
     @OneToMany(mappedBy = "toy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 
+    @OneToMany(mappedBy = "toy")
+    private List<OrderItem> orderItems = new ArrayList<>();
+
     public Toy(Long toyId) {
         this.toyId = toyId;
     }

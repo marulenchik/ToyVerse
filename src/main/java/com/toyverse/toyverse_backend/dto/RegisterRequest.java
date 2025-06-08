@@ -1,5 +1,6 @@
 package com.toyverse.toyverse_backend.dto;
 
+import com.toyverse.toyverse_backend.entity.Role;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -13,4 +14,5 @@ public class RegisterRequest {
     @Size(min = 6)
     private String password;
 
+    private Role role = Role.USER; // Default to USER role
 }

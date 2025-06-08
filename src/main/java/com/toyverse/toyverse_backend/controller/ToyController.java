@@ -3,9 +3,11 @@ package com.toyverse.toyverse_backend.controller;
 import com.toyverse.toyverse_backend.dto.ToyDTO;
 import com.toyverse.toyverse_backend.dto.ToyRequest;
 import com.toyverse.toyverse_backend.entity.Toy;
+import com.toyverse.toyverse_backend.exception.ToyDeletionException;
 import com.toyverse.toyverse_backend.service.ToyService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,6 +44,7 @@ public class ToyController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ToyDTO> createToy(@Valid @RequestBody ToyRequest request) {
         Toy toy = new Toy();
         toy.setName(request.getName());
@@ -54,5 +57,16 @@ public class ToyController {
 
         Toy savedToy = toyService.saveToy(toy);
         return ResponseEntity.ok(new ToyDTO(savedToy));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteToy(@PathVariable Long id) {
+        try {
+            toyService.deleteToy(id);
+            return ResponseEntity.noContent().build();
+        } catch (ToyDeletionException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
