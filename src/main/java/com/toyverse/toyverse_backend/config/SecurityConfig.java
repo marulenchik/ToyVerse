@@ -32,15 +32,16 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/public/**").permitAll()
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/toys/**").hasAnyRole("ADMIN", "USER")  // Both admin and user can view toys
-                .requestMatchers(HttpMethod.POST, "/api/toys/**").hasRole("ADMIN")  // Only admin can create toys
-                .requestMatchers(HttpMethod.PUT, "/api/toys/**").hasRole("ADMIN")  // Only admin can update toys
-                .requestMatchers(HttpMethod.DELETE, "/api/toys/**").hasRole("ADMIN")  // Only admin can delete toys
-                .anyRequest().authenticated()
-            )
+                    .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/api/public/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/toys/*/reviews").hasAnyRole("USER", "ADMIN")
+                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/toys/**").hasAnyRole("ADMIN", "USER")  // Both admin and user can view toys
+                    .requestMatchers(HttpMethod.POST, "/api/toys/**").hasRole("ADMIN")  // Only admin can create toys
+                    .requestMatchers(HttpMethod.PUT, "/api/toys/**").hasRole("ADMIN")  // Only admin can update toys
+                    .requestMatchers(HttpMethod.DELETE, "/api/toys/**").hasRole("ADMIN")  // Only admin can delete toys
+                    .anyRequest().authenticated()
+                )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
