@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Toy Details</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">Toyverse</a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/profile">Profile</a>
+                <a href="/login">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="toy-detail">
+                <img th:if="${toy.imageUrl}" th:src="${toy.imageUrl}" class="toy-image" alt="Toy image">
+                <div class="toy-info">
+                    <h1 th:text="${toy.name}"></h1>
+                    <p class="toy-price" th:text="'$' + ${toy.price}"></p>
+                    <p><strong>Category:</strong> <span th:text="${toy.category}"></span></p>
+                    <p><strong>Age Group:</strong> <span th:text="${toy.ageGroup}"></span></p>
+                    <p><strong>Description:</strong> <span th:text="${toy.description}"></span></p>
+                    <div class="quantity-selector">
+                        <label for="quantity">Quantity:</label>
+                        <input type="number" id="quantity" min="1" value="1">
+                    </div>
+                    <button class="buy-now-btn" onclick="buyNow()">Buy Now</button>
+                    <a href="/" class="button">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function buyNow() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const quantity = document.getElementById('quantity').value;
+            const toyId = new URLSearchParams(window.location.search).get('id');
+
+            try {
+                const response = await fetch('/api/purchases', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify([{
+                        toyId: toyId,
+                        quantity: parseInt(quantity)
+                    }])
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create purchase');
+                }
+
+                const result = await response.json();
+                alert('Purchase successful!');
+                document.getElementById('quantity').value = 1;
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to complete purchase. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html> 

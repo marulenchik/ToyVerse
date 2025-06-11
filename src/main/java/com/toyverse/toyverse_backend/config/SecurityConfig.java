@@ -32,7 +32,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/", "/home", "/login", "/register", "/css/**", "/js/**", "/images/**", 
+                                   "/api/auth/**", "/toy-detail", "/api/toys/**").permitAll()
                     .requestMatchers("/api/public/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/toys/*/reviews").hasAnyRole("USER", "ADMIN")
                     .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
@@ -40,6 +41,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/api/toys/**").hasRole("ADMIN")  // Only admin can create toys
                     .requestMatchers(HttpMethod.PUT, "/api/toys/**").hasRole("ADMIN")  // Only admin can update toys
                     .requestMatchers(HttpMethod.DELETE, "/api/toys/**").hasRole("ADMIN")  // Only admin can delete toys
+                    .requestMatchers("/", "/toys/**", "/admin", "/profile").permitAll()  // Allow access to Thymeleaf views
                     .anyRequest().authenticated()
                 )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

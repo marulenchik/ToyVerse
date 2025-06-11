@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Profile - Toyverse</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">Toyverse</a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/profile">Profile</a>
+                <span id="auth-links">
+                    <a href="/login" id="login-link">Login</a>
+                    <a href="/register" id="register-link">Register</a>
+                    <a href="#" id="logout-link" onclick="handleLogout(event)" style="display: none;">Logout</a>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <h1>Your Profile</h1>
+            
+            <div class="profile-section">
+                <h2>Your Orders</h2>
+                <div id="orders-list" class="orders-list">
+                    <!-- Orders will be loaded here -->
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h2>Write a Review</h2>
+                <div id="review-form" class="review-form">
+                    <select id="toy-select" class="form-control">
+                        <option value="">Select a toy to review</option>
+                    </select>
+                    <div class="rating-input">
+                        <label>Rating:</label>
+                        <div class="stars">
+                            <span onclick="setRating(1)">★</span>
+                            <span onclick="setRating(2)">★</span>
+                            <span onclick="setRating(3)">★</span>
+                            <span onclick="setRating(4)">★</span>
+                            <span onclick="setRating(5)">★</span>
+                        </div>
+                    </div>
+                    <textarea id="review-comment" placeholder="Write your review here..." class="form-control"></textarea>
+                    <button onclick="submitReview()" class="button primary">Submit Review</button>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h2>Your Reviews</h2>
+                <div id="reviews-list" class="reviews-list">
+                    <!-- Reviews will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRating = 0;
+        let purchasedToys = [];
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const loginLink = document.getElementById('login-link');
+            const registerLink = document.getElementById('register-link');
+            const logoutLink = document.getElementById('logout-link');
+
+            if (token) {
+                loginLink.style.display = 'none';
+                registerLink.style.display = 'none';
+                logoutLink.style.display = 'inline';
+            } else {
+                loginLink.style.display = 'inline';
+                registerLink.style.display = 'inline';
+                logoutLink.style.display = 'none';
+            }
+        }
+
+        function handleLogout(event) {
+            event.preventDefault();
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+
+        // Load user's orders and reviews
+        async function loadProfileData() {
+            try {
+                const response = await fetch('/api/purchases', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    const orders = await response.json();
+                    displayOrders(orders);
+                    loadPurchasedToys(orders);
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+
+            loadUserReviews();
+        }
+
+        function displayOrders(orders) {
+            const ordersList = document.getElementById('orders-list');
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<p>You have no orders yet.</p>';
+                return;
+            }
+
+            ordersList.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <h3>Order #${order.orderId}</h3>
+                    <p>Date: ${new Date(order.createdAt).toLocaleDateString()}</p>
+                    <p>Total: $${order.totalPrice.toFixed(2)}</p>
+                    <div class="order-items">
+                        ${order.items.map(item => `
+                            <div class="order-item">
+                                <span>${item.toyName}</span>
+                                <span>Quantity: ${item.quantity}</span>
+                                <span>Price: $${item.itemPrice.toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadPurchasedToys(orders) {
+            purchasedToys = orders.flatMap(order => order.items.map(item => ({
+                id: item.toyId,
+                name: item.toyName
+            })));
+
+            const toySelect = document.getElementById('toy-select');
+            toySelect.innerHTML = '<option value="">Select a toy to review</option>' +
+                purchasedToys.map(toy => `
+                    <option value="${toy.id}">${toy.name}</option>
+                `).join('');
+        }
+
+        async function loadUserReviews() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/reviews/user', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    // If the endpoint is not available, just show an empty reviews section
+                    document.getElementById('reviews-list').innerHTML = '<p>No reviews available.</p>';
+                    return;
+                }
+
+                const reviews = await response.json();
+                const reviewsList = document.getElementById('reviews-list');
+                
+                if (reviews.length === 0) {
+                    reviewsList.innerHTML = '<p>No reviews available.</p>';
+                    return;
+                }
+
+                reviewsList.innerHTML = reviews.map(review => `
+                    <div class="review-card">
+                        <h3>${review.toyName}</h3>
+                        <div class="rating">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</div>
+                        <p>${review.comment}</p>
+                        <small>Posted on ${new Date(review.createdAt).toLocaleDateString()}</small>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading reviews:', error);
+                document.getElementById('reviews-list').innerHTML = '<p>No reviews available.</p>';
+            }
+        }
+
+        function setRating(rating) {
+            currentRating = rating;
+            const stars = document.querySelectorAll('.stars span');
+            stars.forEach((star, index) => {
+                star.style.color = index < rating ? '#ffd700' : '#ccc';
+            });
+        }
+
+        async function submitReview() {
+            const toyId = document.getElementById('toy-select').value;
+            const comment = document.getElementById('review-comment').value;
+
+            if (!toyId) {
+                alert('Please select a toy to review');
+                return;
+            }
+
+            if (currentRating === 0) {
+                alert('Please select a rating');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/toys/${toyId}/reviews`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        rating: currentRating,
+                        comment: comment
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Review submitted successfully!');
+                    document.getElementById('review-comment').value = '';
+                    setRating(0);
+                    loadUserReviews();
+                } else {
+                    const error = await response.text();
+                    alert('Failed to submit review: ' + error);
+                }
+            } catch (error) {
+                alert('An error occurred while submitting the review');
+                console.error('Review submission error:', error);
+            }
+        }
+
+        // Update your DOMContentLoaded event listener
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadProfileData();
+        });
+    </script>
+</body>
+</html> 
