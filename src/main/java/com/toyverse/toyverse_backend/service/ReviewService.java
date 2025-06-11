@@ -1,11 +1,12 @@
 package com.toyverse.toyverse_backend.service;
 
-import com.toyverse.toyverse_backend.dto.ReviewResponse;
-import com.toyverse.toyverse_backend.entity.Review;
+import com.toyverse.toyverse_backend.dto.ReviewRequestDto;
+import com.toyverse.toyverse_backend.dto.ReviewResponseDto;
+import com.toyverse.toyverse_backend.entity.User;
 
 import java.util.List;
 
 public interface ReviewService {
-    Review saveReview(Review review);
-    List<ReviewResponse> getReviewsByToyId(Long toyId);
+    ReviewResponseDto createReview(User user, Long toyId, ReviewRequestDto request);
+    List<ReviewResponseDto> getReviewsByToyId(Long toyId);
 }

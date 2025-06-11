@@ -4,7 +4,7 @@ import com.toyverse.toyverse_backend.entity.Toy;
 import lombok.Data;
 
 @Data
-public class ToyDTO {
+public class ToyDto {
     private Long toyId;
     private String name;
     private String category;
@@ -14,7 +14,7 @@ public class ToyDTO {
     private String imageUrl;
     private Integer stockQuantity;
 
-    public ToyDTO(Toy toy) {
+    public ToyDto(Toy toy) {
         this.toyId = toy.getToyId();
         this.name = toy.getName();
         this.category = toy.getCategory();

@@ -16,7 +16,7 @@ public class ViewController {
 
     @GetMapping("/")
     public String home(Model model) {
-        model.addAttribute("toys", toyService.getAllToys(null, null));
+        model.addAttribute("toys", toyService.getFilteredToys(null, null));
         return "home";
     }
 
@@ -38,7 +38,7 @@ public class ViewController {
 
     @GetMapping("/admin")
     public String admin(Model model) {
-        model.addAttribute("toys", toyService.getAllToys(null, null));
+        model.addAttribute("toys", toyService.getFilteredToys(null, null));
         return "admin";
     }
 

@@ -1,50 +1,65 @@
 package com.toyverse.toyverse_backend.service.implementation;
 
+import com.toyverse.toyverse_backend.dto.ToyDto;
+import com.toyverse.toyverse_backend.dto.ToyRequestDto;
 import com.toyverse.toyverse_backend.entity.Toy;
 import com.toyverse.toyverse_backend.exception.ToyDeletionException;
 import com.toyverse.toyverse_backend.repository.ToyRepository;
 import com.toyverse.toyverse_backend.service.ToyService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class ToyServiceImpl implements ToyService {
 
     private final ToyRepository toyRepository;
 
-    public ToyServiceImpl(ToyRepository toyRepository) {
-        this.toyRepository = toyRepository;
-    }
-
     @Override
-    public List<Toy> getAllToys(String category, String ageGroup) {
+    public List<ToyDto> getFilteredToys(String category, String ageGroup) {
+        List<Toy> toys;
+
         if (category != null && ageGroup != null) {
-            return toyRepository.findByCategoryAndAgeGroup(category, ageGroup);
+            toys = toyRepository.findByCategoryAndAgeGroup(category, ageGroup);
         } else if (category != null) {
-            return toyRepository.findByCategory(category);
+            toys = toyRepository.findByCategory(category);
         } else if (ageGroup != null) {
-            return toyRepository.findByAgeGroup(ageGroup);
+            toys = toyRepository.findByAgeGroup(ageGroup);
         } else {
-            return toyRepository.findAll();
+            toys = toyRepository.findAll();
         }
+
+        return toys.stream().map(ToyDto::new).toList();
     }
 
     @Override
-    public Toy getToyById(Long id) {
-        return toyRepository.findById(id).orElse(null);
+    public ToyDto getToyDTOById(Long id) {
+        return toyRepository.findById(id)
+                .map(ToyDto::new)
+                .orElse(null);
     }
 
     @Override
-    public Toy saveToy(Toy toy) {
-        return toyRepository.save(toy);
+    public ToyDto createToy(ToyRequestDto request) {
+        Toy toy = new Toy();
+        toy.setName(request.getName());
+        toy.setCategory(request.getCategory());
+        toy.setAgeGroup(request.getAgeGroup());
+        toy.setPrice(request.getPrice());
+        toy.setDescription(request.getDescription());
+        toy.setImageUrl(request.getImageUrl());
+        toy.setStockQuantity(request.getStockQuantity());
+
+        return new ToyDto(toyRepository.save(toy));
     }
 
     @Override
-    public void deleteToy(Long id) throws ToyDeletionException {
+    public void deleteToy(Long id) {
         Toy toy = toyRepository.findById(id)
                 .orElseThrow(() -> new ToyDeletionException("Toy not found with id: " + id));
-        
+
         if (toy.getStockQuantity() > 0) {
             throw new ToyDeletionException("Cannot delete toy with non-zero stock quantity. Current stock: " + toy.getStockQuantity());
         }
@@ -52,7 +67,12 @@ public class ToyServiceImpl implements ToyService {
         if (toyRepository.existsByToyIdAndOrderItemsIsNotEmpty(id)) {
             throw new ToyDeletionException("Cannot delete toy that has been ordered in the past. Please archive it instead.");
         }
-        
+
         toyRepository.deleteById(id);
+    }
+
+    @Override
+    public Toy getToyById(Long id){
+        return toyRepository.findById(id).orElse(null);
     }
 }

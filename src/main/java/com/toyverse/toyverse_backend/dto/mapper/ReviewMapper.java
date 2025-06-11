@@ -1,10 +1,11 @@
-package com.toyverse.toyverse_backend.dto;
+package com.toyverse.toyverse_backend.dto.mapper;
 
+import com.toyverse.toyverse_backend.dto.ReviewResponseDto;
 import com.toyverse.toyverse_backend.entity.Review;
 
 public class ReviewMapper {
-    public static ReviewResponse toDto(Review review) {
-        ReviewResponse dto = new ReviewResponse();
+    public static ReviewResponseDto toDto(Review review) {
+        ReviewResponseDto dto = new ReviewResponseDto();
         dto.setReviewId(review.getReviewId());
         dto.setRating(review.getRating());
         dto.setComment(review.getComment());

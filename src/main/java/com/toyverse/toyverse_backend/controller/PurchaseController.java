@@ -1,8 +1,8 @@
 package com.toyverse.toyverse_backend.controller;
 
-import com.toyverse.toyverse_backend.dto.CartItem;
+import com.toyverse.toyverse_backend.dto.CartItemDto;
 import com.toyverse.toyverse_backend.dto.OrderDto;
-import com.toyverse.toyverse_backend.dto.OrderMapper;
+import com.toyverse.toyverse_backend.dto.mapper.OrderMapper;
 import com.toyverse.toyverse_backend.entity.Order;
 import com.toyverse.toyverse_backend.exception.InsufficientStockException;
 import com.toyverse.toyverse_backend.exception.PaymentFailedException;
@@ -23,11 +23,11 @@ public class PurchaseController {
     private final SecurityUtils securityUtils;
 
     @PostMapping
-    public ResponseEntity<?> createPurchase(@Valid @RequestBody List<CartItem> cartItems) {
+    public ResponseEntity<?> createPurchase(@Valid @RequestBody List<CartItemDto> cartItems) {
         try {
             Long userId = securityUtils.getCurrentUser().getId();
-            Order orderEntity = purchaseService.processPurchase(userId, cartItems);
-            OrderDto orderDto = OrderMapper.toDto(orderEntity);
+            Order order = purchaseService.createPurchase(userId, cartItems);
+            OrderDto orderDto = OrderMapper.toDto(order);
             return ResponseEntity.ok(orderDto);
         } catch (InsufficientStockException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -35,4 +35,5 @@ public class PurchaseController {
             return ResponseEntity.status(402).body(e.getMessage());
         }
     }
+
 }

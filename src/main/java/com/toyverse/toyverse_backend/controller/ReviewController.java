@@ -1,66 +1,47 @@
 package com.toyverse.toyverse_backend.controller;
 
-import com.toyverse.toyverse_backend.dto.ReviewMapper;
-import com.toyverse.toyverse_backend.dto.ReviewRequest;
-import com.toyverse.toyverse_backend.dto.ReviewResponse;
-import com.toyverse.toyverse_backend.entity.Review;
-import com.toyverse.toyverse_backend.entity.Toy;
+import com.toyverse.toyverse_backend.dto.ReviewRequestDto;
+import com.toyverse.toyverse_backend.dto.ReviewResponseDto;
 import com.toyverse.toyverse_backend.entity.User;
-import com.toyverse.toyverse_backend.exception.NotPurchasedException;
 import com.toyverse.toyverse_backend.security.SecurityUtils;
 import com.toyverse.toyverse_backend.service.ReviewService;
 import com.toyverse.toyverse_backend.service.ToyService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/toys/{toyId}/reviews")
 public class ReviewController {
+
     private final ReviewService reviewService;
     private final ToyService toyService;
     private final SecurityUtils securityUtils;
 
-    public ReviewController(ReviewService reviewService,
-                            ToyService toyService,
-                            SecurityUtils securityUtils) {
-        this.reviewService = reviewService;
-        this.toyService = toyService;
-        this.securityUtils = securityUtils;
-    }
-
     @PostMapping
-    public ResponseEntity<?> createReview(
+    public ResponseEntity<ReviewResponseDto> createReview(
             @PathVariable Long toyId,
-            @Valid @RequestBody ReviewRequest request
+            @Valid @RequestBody ReviewRequestDto request
     ) {
+        // Optional: if ToyService throws exception, let @ExceptionHandler handle it.
         if (toyService.getToyById(toyId) == null) {
             return ResponseEntity.notFound().build();
         }
 
         User currentUser = securityUtils.getCurrentUser();
 
-        Review review = new Review();
-        review.setRating(request.getRating());
-        review.setComment(request.getComment());
-        review.setUser(currentUser);
-        review.setToy(new Toy(toyId));
-
-        try {
-            Review saved = reviewService.saveReview(review);
-            ReviewResponse dto = ReviewMapper.toDto(saved);
-            return ResponseEntity.ok(dto);
-        } catch (NotPurchasedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        }
+        ReviewResponseDto savedReview = reviewService.createReview(currentUser, toyId, request);
+        return ResponseEntity.ok(savedReview);
     }
 
     @GetMapping
-    public ResponseEntity<List<ReviewResponse>> getReviews(@PathVariable Long toyId) {
-        List<ReviewResponse> result = reviewService.getReviewsByToyId(toyId);
+    public ResponseEntity<List<ReviewResponseDto>> getReviews(@PathVariable Long toyId) {
+        List<ReviewResponseDto> result = reviewService.getReviewsByToyId(toyId);
         return ResponseEntity.ok(result);
     }
 }
+

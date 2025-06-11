@@ -1,17 +1,11 @@
 package com.toyverse.toyverse_backend.controller;
 
-import com.toyverse.toyverse_backend.dto.LoginRequest;
-import com.toyverse.toyverse_backend.dto.RegisterRequest;
-import com.toyverse.toyverse_backend.entity.User;
-import com.toyverse.toyverse_backend.repository.UserRepository;
-import com.toyverse.toyverse_backend.security.JwtTokenProvider;
+import com.toyverse.toyverse_backend.dto.LoginRequestDto;
+import com.toyverse.toyverse_backend.dto.RegisterRequestDto;
+import com.toyverse.toyverse_backend.service.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,50 +13,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
-
-    private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider tokenProvider;
-
-    public AuthController(AuthenticationManager authenticationManager,
-                         UserRepository userRepository,
-                         PasswordEncoder passwordEncoder,
-                         JwtTokenProvider tokenProvider) {
-        this.authenticationManager = authenticationManager;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.tokenProvider = tokenProvider;
-    }
+    private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()
-                )
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = tokenProvider.generateToken(authentication);
-        return ResponseEntity.ok(jwt);
+    public ResponseEntity<String> login(@RequestBody LoginRequestDto loginRequest) {
+        return new ResponseEntity<>(authService.login(loginRequest), HttpStatus.OK);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest registerRequest) {
-        if (userRepository.existsByUsername(registerRequest.getUsername())) {
-            return new ResponseEntity<>("Username is already taken!", HttpStatus.BAD_REQUEST);
+    public ResponseEntity<String> register(@RequestBody RegisterRequestDto registerRequest) {
+        try {
+            authService.registerUser(registerRequest);
+            return new ResponseEntity<>("User registered successfully!", HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
-
-        User user = new User();
-        user.setUsername(registerRequest.getUsername());
-        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setRole(registerRequest.getRole());
-
-        userRepository.save(user);
-
-        return new ResponseEntity<>("User registered successfully!", HttpStatus.OK);
     }
 } 

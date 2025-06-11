@@ -1,5 +1,7 @@
-package com.toyverse.toyverse_backend.dto;
+package com.toyverse.toyverse_backend.dto.mapper;
 
+import com.toyverse.toyverse_backend.dto.OrderDto;
+import com.toyverse.toyverse_backend.dto.OrderItemDto;
 import com.toyverse.toyverse_backend.entity.Order;
 import com.toyverse.toyverse_backend.entity.OrderItem;
 

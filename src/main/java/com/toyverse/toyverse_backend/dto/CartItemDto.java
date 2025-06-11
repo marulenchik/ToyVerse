@@ -4,7 +4,7 @@ import jakarta.validation.constraints.Min;
 import lombok.Data;
 
 @Data
-public class CartItem {
+public class CartItemDto {
     private Long toyId;
 
     @Min(1)

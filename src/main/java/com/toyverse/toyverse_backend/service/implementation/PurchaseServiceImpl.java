@@ -1,12 +1,14 @@
 package com.toyverse.toyverse_backend.service.implementation;
 
-import com.toyverse.toyverse_backend.dto.CartItem;
+import com.toyverse.toyverse_backend.dto.CartItemDto;
 import com.toyverse.toyverse_backend.entity.*;
 import com.toyverse.toyverse_backend.exception.InsufficientStockException;
 import com.toyverse.toyverse_backend.repository.OrderRepository;
 import com.toyverse.toyverse_backend.repository.ToyRepository;
 import com.toyverse.toyverse_backend.repository.UserRepository;
+import com.toyverse.toyverse_backend.security.SecurityUtils;
 import com.toyverse.toyverse_backend.service.PurchaseService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,25 +16,23 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 @Transactional
 public class PurchaseServiceImpl implements PurchaseService {
     private final ToyRepository toyRepository;
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
-
-    public PurchaseServiceImpl(
-            ToyRepository toyRepository,
-            UserRepository userRepository,
-            OrderRepository orderRepository
-    ) {
-        this.toyRepository = toyRepository;
-        this.userRepository = userRepository;
-        this.orderRepository = orderRepository;
-    }
+    private final SecurityUtils securityUtils;
 
     @Override
-    public Order processPurchase(Long userId, List<CartItem> cartItems) {
+    public Order createPurchase(Long userId, List<CartItemDto> cartItems) {
+        return processPurchase(userId, cartItems);
+    }
+
+
+    @Override
+    public Order processPurchase(Long userId, List<CartItemDto> cartItems) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -42,7 +42,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         order.setCreatedAt(new Date());
 
         double totalPrice = 0;
-        for (CartItem item : cartItems) {
+        for (CartItemDto item : cartItems) {
             Toy toy = toyRepository.findById(item.getToyId())
                     .orElseThrow(() -> new RuntimeException("Toy not found"));
 
@@ -56,7 +56,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         order.setTotalPrice(totalPrice);
 
         List<OrderItem> orderItems = new ArrayList<>();
-        for (CartItem item : cartItems) {
+        for (CartItemDto item : cartItems) {
             Toy toy = toyRepository.findById(item.getToyId()).get();
 
             OrderItem orderItem = new OrderItem();

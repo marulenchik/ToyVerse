@@ -1,51 +1,54 @@
 package com.toyverse.toyverse_backend.service.implementation;
 
-import com.toyverse.toyverse_backend.dto.ReviewResponse;
+import com.toyverse.toyverse_backend.dto.ReviewRequestDto;
+import com.toyverse.toyverse_backend.dto.ReviewResponseDto;
 import com.toyverse.toyverse_backend.entity.Review;
+import com.toyverse.toyverse_backend.entity.Toy;
+import com.toyverse.toyverse_backend.entity.User;
 import com.toyverse.toyverse_backend.exception.NotPurchasedException;
 import com.toyverse.toyverse_backend.repository.OrderItemRepository;
 import com.toyverse.toyverse_backend.repository.ReviewRepository;
 import com.toyverse.toyverse_backend.service.ReviewService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final OrderItemRepository orderItemRepository;
 
-    public ReviewServiceImpl(ReviewRepository reviewRepository,
-                             OrderItemRepository orderItemRepository) {
-        this.reviewRepository = reviewRepository;
-        this.orderItemRepository = orderItemRepository;
-    }
-
     @Override
-    public Review saveReview(Review review) {
-        Long userId = review.getUser().getId();
-        Long toyId = review.getToy().getToyId();
-
-        if (!hasUserPurchasedToy(userId, toyId)) {
+    public ReviewResponseDto createReview(User user, Long toyId, ReviewRequestDto request) {
+        if (!hasUserPurchasedToy(user.getId(), toyId)) {
             throw new NotPurchasedException("You must purchase this toy before reviewing it");
         }
 
-        return reviewRepository.save(review);
+        Review review = new Review();
+        review.setRating(request.getRating());
+        review.setComment(request.getComment());
+        review.setUser(user);
+        review.setToy(new Toy(toyId)); // Only ID is needed for JPA reference
+
+        Review saved = reviewRepository.save(review);
+        return mapToDto(saved);
+    }
+
+    @Override
+    public List<ReviewResponseDto> getReviewsByToyId(Long toyId) {
+        List<Review> reviews = reviewRepository.findByToyToyId(toyId);
+        return reviews.stream().map(this::mapToDto).toList();
     }
 
     private boolean hasUserPurchasedToy(Long userId, Long toyId) {
         return orderItemRepository.existsByOrder_User_IdAndToy_ToyId(userId, toyId);
     }
 
-    @Override
-    public List<ReviewResponse> getReviewsByToyId(Long toyId) {
-        List<Review> reviews = reviewRepository.findByToyToyId(toyId);
-        return reviews.stream().map(this::mapToDto).toList();
-    }
-
-    private ReviewResponse mapToDto(Review review) {
-        ReviewResponse dto = new ReviewResponse();
+    private ReviewResponseDto mapToDto(Review review) {
+        ReviewResponseDto dto = new ReviewResponseDto();
         dto.setReviewId(review.getReviewId());
         dto.setRating(review.getRating());
         dto.setComment(review.getComment());
