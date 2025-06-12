@@ -9,6 +9,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.toyverse.toyverse_backend.constant.SecurityConstant;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -80,7 +81,6 @@ public class GlobalExceptionHandler {
                 "Internal Server Error",
                 "Unknown Error"
         );
-        ex.printStackTrace();
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

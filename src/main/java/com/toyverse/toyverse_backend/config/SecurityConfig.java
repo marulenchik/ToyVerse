@@ -1,6 +1,9 @@
 package com.toyverse.toyverse_backend.config;
 
+import com.toyverse.toyverse_backend.constant.SecurityConstant;
 import com.toyverse.toyverse_backend.security.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,36 +20,40 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@RequiredArgsConstructor
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/", "/home", "/login", "/register", "/css/**", "/js/**", "/images/**", 
-                                   "/api/auth/**", "/toy-detail", "/api/toys/**").permitAll()
-                    .requestMatchers("/api/public/**").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/toys/*/reviews").hasAnyRole("USER", "ADMIN")
-                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/toys/**").hasAnyRole("ADMIN", "USER")  // Both admin and user can view toys
-                    .requestMatchers(HttpMethod.POST, "/api/toys/**").hasRole("ADMIN")  // Only admin can create toys
-                    .requestMatchers(HttpMethod.PUT, "/api/toys/**").hasRole("ADMIN")  // Only admin can update toys
-                    .requestMatchers(HttpMethod.DELETE, "/api/toys/**").hasRole("ADMIN")  // Only admin can delete toys
-                    .requestMatchers("/", "/toys/**", "/admin", "/profile").permitAll()  // Allow access to Thymeleaf views
-                    .anyRequest().authenticated()
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(SecurityConstant.PUBLIC_URLS).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/toys/*/reviews").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/toys/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.POST, "/api/toys/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/toys/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/toys/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
                 )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("text/plain");
+                            response.getWriter().write(SecurityConstant.FORBIDDEN_MESSAGE);
+                        })
+                        .accessDeniedHandler((request, response, accessDenyException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("text/plain");
+                            response.getWriter().write(SecurityConstant.ACCESS_DENIED_MESSAGE);
+                        })
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     @Bean
