@@ -16,7 +16,7 @@ public class User {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role = Role.USER; // Default role is USER
+    private Role role = Role.USER;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();

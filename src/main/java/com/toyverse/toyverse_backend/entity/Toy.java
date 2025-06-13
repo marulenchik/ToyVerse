@@ -27,6 +27,9 @@ public class Toy {
     private String imageUrl;
     private Integer stockQuantity;
 
+    @Enumerated(EnumType.STRING)
+    private ToyStatus status = ToyStatus.ACTIVE;
+
     @OneToMany(mappedBy = "toy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 

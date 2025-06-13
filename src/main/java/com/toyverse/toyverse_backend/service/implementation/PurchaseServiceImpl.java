@@ -2,11 +2,11 @@ package com.toyverse.toyverse_backend.service.implementation;
 
 import com.toyverse.toyverse_backend.dto.CartItemDto;
 import com.toyverse.toyverse_backend.entity.*;
+import com.toyverse.toyverse_backend.exception.BusinessException;
 import com.toyverse.toyverse_backend.exception.InsufficientStockException;
 import com.toyverse.toyverse_backend.repository.OrderRepository;
 import com.toyverse.toyverse_backend.repository.ToyRepository;
 import com.toyverse.toyverse_backend.repository.UserRepository;
-import com.toyverse.toyverse_backend.security.SecurityUtils;
 import com.toyverse.toyverse_backend.service.PurchaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,13 +23,11 @@ public class PurchaseServiceImpl implements PurchaseService {
     private final ToyRepository toyRepository;
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
-    private final SecurityUtils securityUtils;
 
     @Override
     public Order createPurchase(Long userId, List<CartItemDto> cartItems) {
         return processPurchase(userId, cartItems);
     }
-
 
     @Override
     public Order processPurchase(Long userId, List<CartItemDto> cartItems) {
@@ -51,6 +49,11 @@ public class PurchaseServiceImpl implements PurchaseService {
                         "Insufficient stock for: " + toy.getName()
                 );
             }
+
+            if (toy.getStatus() != ToyStatus.ACTIVE) {
+                throw new BusinessException("This toy is no longer available for sale.");
+            }
+
             totalPrice += toy.getPrice() * item.getQuantity();
         }
         order.setTotalPrice(totalPrice);

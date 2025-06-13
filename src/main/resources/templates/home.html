@@ -25,7 +25,7 @@
             <h1>All Toys</h1>
             <div class="toy-grid">
                 <div th:each="toy : ${toys}" class="toy-card">
-                    <img th:src="${toy.imageUrl}" th:alt="${toy.name}">
+                    <img th:src="${toy.imageUrl}" th:alt="${toy.name}" class="toy-image">
                     <h3 th:text="${toy.name}"></h3>
                     <p class="price" th:text="${'$' + toy.price}"></p>
                     <button class="view-details-btn" th:onclick="'viewToyDetails(' + ${toy.toyId} + ')'">View Details</button>

@@ -27,7 +27,6 @@ public class ReviewController {
             @PathVariable Long toyId,
             @Valid @RequestBody ReviewRequestDto request
     ) {
-        // Optional: if ToyService throws exception, let @ExceptionHandler handle it.
         if (toyService.getToyById(toyId) == null) {
             return ResponseEntity.notFound().build();
         }

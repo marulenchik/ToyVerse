@@ -14,5 +14,5 @@ public class RegisterRequestDto {
     @Size(min = 6)
     private String password;
 
-    private Role role = Role.USER; // Default to USER role
+    private Role role = Role.USER;
 }

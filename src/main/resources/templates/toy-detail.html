@@ -19,7 +19,7 @@
     <div class="main-content">
         <div class="container">
             <div class="toy-detail">
-                <img th:if="${toy.imageUrl}" th:src="${toy.imageUrl}" class="toy-image" alt="Toy image">
+                <img th:if="${toy.imageUrl}" th:src="${toy.imageUrl}" alt="Toy image" class="toy-image">
                 <div class="toy-info">
                     <h1 th:text="${toy.name}"></h1>
                     <p class="toy-price" th:text="'$' + ${toy.price}"></p>

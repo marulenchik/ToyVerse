@@ -34,6 +34,26 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(ToyDeletionException.class)
+    public ResponseEntity<ErrorResponse> handleToyDeletion(ToyDeletionException ex) {
+        ErrorResponse body = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "No Such Toy",
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex) {
+        ErrorResponse body = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Deleted Status",
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(PaymentFailedException.class)
     public ResponseEntity<ErrorResponse> handlePaymentFailed(PaymentFailedException ex) {
         ErrorResponse body = new ErrorResponse(

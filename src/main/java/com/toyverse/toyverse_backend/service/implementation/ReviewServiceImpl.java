@@ -31,7 +31,7 @@ public class ReviewServiceImpl implements ReviewService {
         review.setRating(request.getRating());
         review.setComment(request.getComment());
         review.setUser(user);
-        review.setToy(new Toy(toyId)); // Only ID is needed for JPA reference
+        review.setToy(new Toy(toyId));
 
         Review saved = reviewRepository.save(review);
         return mapToDto(saved);

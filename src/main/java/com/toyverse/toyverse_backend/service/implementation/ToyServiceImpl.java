@@ -3,6 +3,7 @@ package com.toyverse.toyverse_backend.service.implementation;
 import com.toyverse.toyverse_backend.dto.ToyDto;
 import com.toyverse.toyverse_backend.dto.ToyRequestDto;
 import com.toyverse.toyverse_backend.entity.Toy;
+import com.toyverse.toyverse_backend.entity.ToyStatus;
 import com.toyverse.toyverse_backend.exception.ToyDeletionException;
 import com.toyverse.toyverse_backend.repository.ToyRepository;
 import com.toyverse.toyverse_backend.service.ToyService;
@@ -60,15 +61,8 @@ public class ToyServiceImpl implements ToyService {
         Toy toy = toyRepository.findById(id)
                 .orElseThrow(() -> new ToyDeletionException("Toy not found with id: " + id));
 
-        if (toy.getStockQuantity() > 0) {
-            throw new ToyDeletionException("Cannot delete toy with non-zero stock quantity. Current stock: " + toy.getStockQuantity());
-        }
-
-        if (toyRepository.existsByToyIdAndOrderItemsIsNotEmpty(id)) {
-            throw new ToyDeletionException("Cannot delete toy that has been ordered in the past. Please archive it instead.");
-        }
-
-        toyRepository.deleteById(id);
+        toy.setStatus(ToyStatus.DISCONTINUED);
+        toyRepository.save(toy);
     }
 
     @Override

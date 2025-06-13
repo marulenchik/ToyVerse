@@ -36,12 +36,6 @@ public class ViewController {
         return "checkout";
     }
 
-    @GetMapping("/admin")
-    public String admin(Model model) {
-        model.addAttribute("toys", toyService.getFilteredToys(null, null));
-        return "admin";
-    }
-
     @GetMapping("/profile")
     public String profile() {
         return "profile";
